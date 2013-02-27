@@ -19,7 +19,7 @@
 # USAGE         : ./check_cpu_perf.sh {warning} {critical}
 #
 # Example: ./check_cpu_perf.sh 20 10
-# OK: CPU Idle = 84.10% | CpuUser=12.99; CpuNice=0.00; CpuSystem=2.90; CpuIowait=0.01; CpuSteal=0.00; CpuIdle=84.10:20:10
+# OK: CPU Idle = 84.10% | CpuUser=12.99; CpuNice=0.00; CpuSystem=2.90; CpuIowait=0.01; CpuSteal=0.00; CpuIdle=84.10;20;10
 #
 # Note: the option exists to NOT test for a threshold. Specifying 0 (zero) for both warning and critical will always return an exit code of 0.
 
@@ -35,16 +35,15 @@ exit 3
 fi
 
 #Disable nagios alerts if warning and critical limits are both set to 0 (zero)
-if [ $1 -eq 0 ]
- then
-  if [ $2 -eq 0 ]
-   then
+export WARN_LEVEL=$1
+export CRIT_LEVEL=$2
+if [ $WARN_LEVEL -eq 0 -a $CRIT_LEVEL -eq 0 ]
+then
     ALERT=false
-  fi
 fi
         
 #Ensure warning is greater than critical limit
-if [ $1 -lt $2 ]
+if [ $WARN_LEVEL -lt $CRIT_LEVEL ]
  then
   echo "Please ensure warning is greater than critical, eg."
   echo "Usage: $0 20 10"
@@ -128,10 +127,10 @@ SYSSTATRPM=`rpm -q sysstat|awk -F\- '{print $2}'|awk -F\. '{print $1}'`
 if [ $SYSSTATRPM -gt 5 ]
  then
   SARCPUIDLE=`echo ${SARCPU}|awk '{print $8}'|awk -F. '{print $1}'`
-  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $8 "% | " "CpuUser=" $3 "; CpuNice=" $4 "; CpuSystem=" $5 "; CpuIowait=" $6 "; CpuSteal=" $7 "; CpuIdle=" $8":20:10"}'`
+  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $8 "% | CpuIdle=" $8";" ENVIRON["WARN_LEVEL"] ";" ENVIRON["CRIT_LEVEL"] "; CpuUser=" $3 "; CpuNice=" $4 "; CpuSystem=" $5 "; CpuIowait=" $6 "; CpuSteal=" $7 }'`
  else
   SARCPUIDLE=`echo ${SARCPU}|awk '{print $7}'|awk -F. '{print $1}'`
-  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $7 "% | " "CpuUser=" $3 "; CpuNice=" $4 "; CpuSystem=" $5 "; CpuIowait=" $6 "; CpuIdle=" $7":20:10"}'`
+  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $7 "% | CPU Idle = " $7 ";" ENVIRON["WARN_LEVEL"] ";" ENVIRON["CRIT_LEVEL"] "; CpuUser=" $3 "; CpuNice=" $4 "; CpuSystem=" $5 "; CpuIowait=" $6 }'`
 fi
 ;;
 'dpkg')
@@ -140,10 +139,10 @@ SYSSTATDPKG=`dpkg -l sysstat|grep sysstat|awk '{print $3}'|awk -F\. '{print $1}'
 if [ $SYSSTATDPKG -gt 5 ]
  then
   SARCPUIDLE=`echo ${SARCPU}|awk '{print $8}'|awk -F. '{print $1}'`
-  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $8 "% | " "CpuUser=" $3 "; CpuNice=" $4 "; CpuSystem=" $5 "; CpuIowait=" $6 "; CpuSteal=" $7 "; CpuIdle=" $8":20:10"}'`
+  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $8 "% | CpuIdle=" $8";" ENVIRON["WARN_LEVEL"] ";" ENVIRON["CRIT_LEVEL"] "; CpuUser=" $3 "; CpuNice=" $4 "; CpuSystem=" $5 "; CpuIowait=" $6 "; CpuSteal=" $7 }'`
  else
   SARCPUIDLE=`echo ${SARCPU}|awk '{print $7}'|awk -F. '{print $1}'`
-  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $7 "% | " "CpuUser=" $3 "; CpuNice=" $4 "; CpuSystem=" $5 "; CpuIowait=" $6 "; CpuIdle=" $7":20:10"}'`
+  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $7 "% | CPU Idle = " $7 ";" ENVIRON["WARN_LEVEL"] ";" ENVIRON["CRIT_LEVEL"] "; CpuUser=" $3 "; CpuNice=" $4 "; CpuSystem=" $5 "; CpuIowait=" $6}'`
 fi
 ;;
 'lslpp')
@@ -154,7 +153,7 @@ if [ $SYSSTATLSLPP -gt 4 ]
   CpuPhysc=`echo ${SARCPU}|awk '{print $6}'`
   LPARCPU=`/usr/bin/lparstat -i | grep "Maximum Capacity" | awk '{print $4}' |head -1`
   SARCPUIDLE=`echo "scale=2;100-(${CpuPhysc}/${LPARCPU}*100)" | bc | awk -F. '{print $1}'`
-  PERFDATA=`echo ${SARCPU}|awk '{print "CpuUser=" $2 "; CpuSystem=" $3 "; CpuIowait=" $4 "; CpuPhysc=" $6 "; CpuEntc=" $7 "; CpuIdle=" $5":20:10"}'`
+  PERFDATA=`echo ${SARCPU}|awk '{print "CpuIdle=" $5";" ENVIRON["WARN_LEVEL"] ";" ENVIRON["CRIT_LEVEL"] "; CpuUser=" $2 "; CpuSystem=" $3 "; CpuIowait=" $4 "; CpuPhysc=" $6 "; CpuEntc=" $7 }'`
   CPU=`echo "CPU Idle = "${SARCPUIDLE}"% |" ${PERFDATA}"; LparCpuIdle="${SARCPUIDLE}"; LparCpuTotal="$LPARCPU`
  else
   echo "AIX $SYSSTATLSLPP Not Supported"
@@ -167,7 +166,7 @@ SYSSTATPKGINFO=`pkginfo -l SUNWaccu|grep VERSION|awk '{print $2}'|awk -F\. '{pri
 if [ $SYSSTATPKGINFO -ge 11 ]
  then
   SARCPUIDLE=`echo ${SARCPU}|awk '{print $5}'`
-  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $5 "% | " "CpuUser=" $2 "; CpuSystem=" $3 "; CpuIowait=" $4 "; CpuIdle=" $5":20:10"}'`
+  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $5 "% | CpuIdle=" $5";" ENVIRON["WARN_LEVEL"] ";" ENVIRON["CRIT_LEVEL"] "; CpuUser=" $2 "; CpuSystem=" $3 "; CpuIowait=" $4 }'`
  else
   echo "Solaris $SYSSTATPKGINFO Not Supported"
   exit 3
@@ -179,7 +178,7 @@ SYSSTATPKGINFO=`pkg_info | grep ^bsdsar | awk -F\- '{print $2}' | awk -F\. '{pri
 if [ $SYSSTATPKGINFO -ge 1 ]
  then
   SARCPUIDLE=`echo ${SARCPU}|awk '{print $6}'`
-  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $6 "% | " "CpuUser=" $2 "; CpuSystem=" $3 "; CpuNice=" $4 "; CpuIntrpt=" $5 "; CpuIdle=" $6":20:10"}'`
+  CPU=`echo ${SARCPU}|awk '{print "CPU Idle = " $6 "% | CPU Idle = " $6 ";" ENVIRON["WARN_LEVEL"] ";" ENVIRON["CRIT_LEVEL"] "; CpuUser=" $2 "; CpuSystem=" $3 "; CpuNice=" $4 "; CpuIntrpt=" $5 }'`
  else
   echo "BSD $SYSSTATPKGINFO Not Supported"
   exit 3
@@ -188,25 +187,25 @@ fi
 esac
 
 #Display CPU Performance without alert
-if [ "$ALERT" == "false" ]
+if [ "$ALERT" = "false" ]
  then
-		echo "$CPU"
+		echo "OK: $CPU"
 		exit 0
  else
         ALERT=true
 fi
 
 #Display CPU Performance with alert
-if [ ${SARCPUIDLE} -lt $2 ]
+if [ ${SARCPUIDLE} -lt $CRIT_LEVEL ]
  then
 		echo "CRITICAL: $CPU"
 		exit 2
- elif [ $SARCPUIDLE -lt $1 ]
+ elif [ $SARCPUIDLE -lt $WARN_LEVEL ]
 		 then
 		  echo "WARNING: $CPU"
 		  exit 1
-         else
-		  echo "OK: $CPU"
-		  exit 0
+ else
+    echo "OK: $CPU"
+	exit 0
 fi
 
