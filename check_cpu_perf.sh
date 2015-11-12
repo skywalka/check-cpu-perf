@@ -18,6 +18,9 @@
 #
 # USAGE         : ./check_cpu_perf.sh {warning} {critical}
 #
+# Fixing this so we can actuall set values that are actually reflected in the performance data. 
+#   - Dale Harris <daleharris@google.com>, 10 Nov 2015
+#
 # Example: ./check_cpu_perf.sh 20 10
 # OK: CPU Idle = 84.10% | CpuUser=12.99; CpuNice=0.00; CpuSystem=2.90; CpuIowait=0.01; CpuSteal=0.00; CpuIdle=84.10:20:10
 #
