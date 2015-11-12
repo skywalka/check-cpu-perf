@@ -34,20 +34,23 @@ then
 exit 3
 fi
 
+WARN=$1
+CRIT=$2
+
 #Disable nagios alerts if warning and critical limits are both set to 0 (zero)
-if [ $1 -eq 0 ]
+if [ $WARN -eq 0 ]
  then
-  if [ $2 -eq 0 ]
+  if [ $CRIT -eq 0 ]
    then
     ALERT=false
   fi
 fi
         
 #Ensure warning is greater than critical limit
-if [ $1 -lt $2 ]
+if [ $WARN -lt $CRIT ]
  then
   echo "Please ensure warning is greater than critical, eg."
-  echo "Usage: $0 20 10"
+  echo "Usage: $0 <warn> <crit>"
   exit 3
 fi
 
@@ -112,13 +115,8 @@ PACKAGE="pkg_info"
 esac
 
 #Define locale to ensure time is in 24 hour format
-LC_MONETARY=en_AU.UTF-8
-LC_NUMERIC=en_AU.UTF-8
-LC_ALL=en_AU.UTF-8
-LC_MESSAGES=en_AU.UTF-8
-LC_COLLATE=en_AU.UTF-8
-LANG=en_AU.UTF-8
-LC_TIME=en_AU.UTF-8
+LC_ALL=C
+export LC_ALL
 
 #Collect sar output
 case "$PACKAGE" in
@@ -197,11 +195,11 @@ if [ "$ALERT" == "false" ]
 fi
 
 #Display CPU Performance with alert
-if [ ${SARCPUIDLE} -lt $2 ]
+if [ ${SARCPUIDLE} -lt $CRIT ]
  then
 		echo "CRITICAL: $CPU"
 		exit 2
- elif [ $SARCPUIDLE -lt $1 ]
+ elif [ $SARCPUIDLE -lt $WARN ]
 		 then
 		  echo "WARNING: $CPU"
 		  exit 1
